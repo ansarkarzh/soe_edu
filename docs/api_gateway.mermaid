@@ -1,0 +1,22 @@
+erDiagram
+    REQUESTS ||--o{ RESPONSES : "has"
+    REQUESTS {
+        int id PK
+        string method
+        string path
+        string body
+        datetime received_at
+    }
+    RESPONSES {
+        int id PK
+        int request_id FK
+        int status_code
+        string body
+        datetime sent_at
+    }
+    LOGS {
+        int id PK
+        int request_id FK
+        string log_message
+        datetime logged_at
+    }

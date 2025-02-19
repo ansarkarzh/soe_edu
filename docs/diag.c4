@@ -1,0 +1,110 @@
+specification {
+  element actor
+  element system
+  element container
+  element database
+  element queue
+  element entity
+}
+
+model {
+
+  user = actor "Пользователь" {
+    description "Пользователь социальной сети"
+  }
+
+  socialNetwork = system "Социальная сеть" {
+    ui = container "Web UI" {
+      description "Веб-приложение"
+      style {
+        shape browser
+      }
+    }
+
+    apiGateway = container "API Gateway" {
+      description "Принимает все запросы от UI, маршрутизирует их по сервисам"
+      style {
+      }
+    }
+
+    usersService = container "Users Service" {
+      description "Регистрация, аутентификация, хранение профилей и ролей"
+      technology "Python"
+      style {
+      }
+    }
+
+    usersDb = database "Users DB" {
+      description "Хранение учётных записей (PostgreSQL)"
+      technology "PostgreSQL"
+      style {
+        color indigo
+        shape cylinder
+      }
+    }
+
+    postsService = container "Posts Service" {
+      description "Управляет постами и комментариями (CRUD операции)"
+      technology "PostgreSQL"
+      style {
+      }
+    }
+
+    // База данных для постов
+    postsDb = database "Posts DB" {
+      description "Хранение постов, комментариев (PostgreSQL)"
+      technology "PostgreSQL"
+      style {
+        color indigo
+        shape cylinder
+      }
+    }
+
+    statisticsService = container "Statistics Service" {
+      description "Подсчитывает лайки, просмотры, комментарии, хранит агрегированную статистику"
+      technology "Python"
+      style {
+      }
+    }
+
+    statsDb = database "Statistics DB" {
+      description "ClickHouse для аналитики и агрегации"
+      technology "ClickHouse"
+      style {
+        color indigo
+        shape cylinder
+      }
+    }
+
+    messageBroker = queue "Message Broker" {
+      description "Для асинхронной передачи событий (лайки, просмотры, комментарии) в сервис статистики"
+      technology "RabbitMQ"
+      style {
+      }
+    }
+
+
+    user -> ui "Использует Web UI"
+    ui -> apiGateway "Вызывает REST API"
+    apiGateway -> usersService "Запросы (регистрация, аутентификация)"
+    apiGateway -> postsService "Запросы (управление постами/комментариями)"
+    apiGateway -> statisticsService "Запросы (получение статистики)"
+    usersService -> usersDb "CRUD пользователей"
+    postsService -> postsDb "CRUD постов и комментариев"
+    postsService -> messageBroker "События (лайк, просмотр, комментарий)"
+    messageBroker -> statisticsService "Передача событий для подсчёта статистики"
+    statisticsService -> statsDb "Запись/чтение агрегированных данных"
+  }
+}
+
+views {
+
+  view contextView{
+    title "Социальная сеть"
+    description "hmw1"
+    include user
+    include socialNetwork.*
+    autoLayout LeftRight
+  }
+
+}
