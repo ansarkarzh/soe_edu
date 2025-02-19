@@ -1,0 +1,22 @@
+erDiagram
+    USERS ||--o{ ROLES : "has"
+    USERS {
+        int id PK
+        string username
+        string email
+        string password_hash
+        datetime created_at
+        datetime updated_at
+    }
+    ROLES {
+        int id PK
+        string name
+        string description
+        datetime created_at
+        datetime updated_at
+    }
+    USER_ROLES {
+        int user_id FK
+        int role_id FK
+        datetime assigned_at
+    }

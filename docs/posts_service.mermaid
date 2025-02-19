@@ -1,0 +1,31 @@
+erDiagram
+    POSTS ||--o{ COMMENTS : "has"
+    POSTS ||--o{ LIKES : "has"
+    POSTS ||--o{ VIEWS : "has"
+    POSTS {
+        int id PK
+        int user_id FK
+        string content
+        datetime created_at
+        datetime updated_at
+    }
+    COMMENTS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        string content
+        datetime created_at
+        datetime updated_at
+    }
+    LIKES {
+        int id PK
+        int post_id FK
+        int user_id FK
+        datetime liked_at
+    }
+    VIEWS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        datetime viewed_at
+    }
