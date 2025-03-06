@@ -1,55 +1,37 @@
-version: '3.8'
-
 services:
-  postgres:
+  db:
     image: postgres:13
-    platform: linux/amd64
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - ./.env
     environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_DB=${POSTGRES_DB}
-    ports:
-      - "5432:5432"  # Убедитесь, что порт прокинут
-    networks:
-      - app-network
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  user-service:
+  user_service:
     build: ./user_service
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
-    env_file:
-      - ./.env
     environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - DOCKER_ENV=true  # Добавлено для определения, что сервис запущен в Docker
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/users_db
+      - SECRET_KEY=your-secret-key
+    command: sh -c "python -m pytest && uvicorn app:app --host 0.0.0.0 --port 8000"
+
+  api_service:
+    build: ./api_service
     ports:
       - "8000:8000"
-    networks:
-      - app-network
-
-  api-gateway:
-    build: ./api_gateway
     depends_on:
-      - user-service
-    ports:
-      - "8080:8080"
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      - user_service
+    environment:
+      - USER_SERVICE_URL=http://user_service:8000
+    command: sh -c "python -m pytest && uvicorn app:app --host 0.0.0.0 --port 8000"
 
 volumes:
   postgres_data:
