@@ -1,15 +1,13 @@
 openapi: 3.0.0
 info:
-  title: User Management API
-  description: API for user registration, authentication, and profile management
+  title: User Authentication API
   version: 1.0.0
-servers:
-  - url: http://localhost:8080
-    description: API Gateway
+
 paths:
   /register:
     post:
-      summary: Register a new user
+      summary: Регистрация нового пользователя
+      operationId: registerUser
       requestBody:
         required: true
         content:
@@ -18,47 +16,82 @@ paths:
               $ref: '#/components/schemas/UserCreate'
       responses:
         '200':
-          description: User registered successfully
+          description: Пользователь успешно зарегистрирован
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/User'
         '400':
-          description: Registration failed (e.g., username or email already exists)
+          description: Некорректный запрос (например, логин или email уже зарегистрированы)
+
   /login:
     post:
-      summary: Authenticate a user
+      summary: Вход пользователя
+      operationId: loginUser
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginForm'
+              $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Authentication successful
+          description: Успешный вход
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Token'
         '401':
-          description: Authentication failed
-  /profile:
+          description: Не авторизован (неверный логин или пароль)
+
+
+  /token:
+    post:
+      summary: Получение токена доступа
+      operationId: getToken
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Токен успешно сгенерирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Не авторизован (неверный логин или пароль)
+
+  /users/me:
     get:
-      summary: Get user profile information
+      summary: Получение профиля текущего пользователя
+      operationId: getCurrentUser
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: User profile information
+          description: Профиль пользователя
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/User'
         '401':
-          description: Not authenticated
+          description: Не авторизован
+
     put:
-      summary: Update user profile information
+      summary: Обновление профиля текущего пользователя
+      operationId: updateCurrentUser
       security:
         - bearerAuth: []
       requestBody:
@@ -69,109 +102,96 @@ paths:
               $ref: '#/components/schemas/UserUpdate'
       responses:
         '200':
-          description: Profile updated successfully
+          description: Профиль пользователя обновлен
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/User'
         '401':
-          description: Not authenticated
+          description: Не авторизован
+
 components:
   schemas:
     UserCreate:
       type: object
       required:
-        - username
+        - login
         - password
         - email
       properties:
-        username:
+        login:
           type: string
-          example: johndoe
         password:
           type: string
-          format: password
-          example: password123
         email:
           type: string
           format: email
-          example: john.doe@example.com
+
     UserUpdate:
       type: object
       properties:
         first_name:
           type: string
-          example: John
         last_name:
           type: string
-          example: Doe
         birth_date:
           type: string
           format: date
-          example: 1990-01-01
         email:
           type: string
           format: email
-          example: john.doe@example.com
         phone_number:
           type: string
-          example: 1234567890
-    UserResponse:
+
+    User:
       type: object
       properties:
         id:
           type: integer
-          example: 1
-        username:
+        login:
           type: string
-          example: johndoe
         email:
           type: string
           format: email
-          example: john.doe@example.com
         first_name:
           type: string
-          example: John
+          nullable: true
         last_name:
           type: string
-          example: Doe
+          nullable: true
         birth_date:
           type: string
           format: date
-          example: 1990-01-01
+          nullable: true
         phone_number:
           type: string
-          example: 1234567890
+          nullable: true
         created_at:
           type: string
           format: date-time
-          example: 2023-01-01T00:00:00Z
         updated_at:
           type: string
           format: date-time
-          example: 2023-01-01T00:00:00Z
-    LoginForm:
+
+    LoginRequest:
       type: object
       required:
-        - username
+        - login
         - password
       properties:
-        username:
+        login:
           type: string
-          example: johndoe
         password:
           type: string
-          format: password
-          example: password123
+
     Token:
       type: object
       properties:
         access_token:
           type: string
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         token_type:
           type: string
-          example: bearer
+
   securitySchemes:
     bearerAuth:
       type: http

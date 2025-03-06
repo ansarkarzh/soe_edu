@@ -1,0 +1,72 @@
+### Регистрация нового пользователя
+POST http://localhost:8000/register
+Content-Type: application/json
+
+{
+  "login": "testuser1",
+  "password": "testpassword",
+  "email": "test@example.com"
+}
+
+### Вход в систему
+# @name login
+POST http://localhost:8000/login
+Content-Type: application/json
+
+{
+  "login": "testuser1",
+  "password": "testpassword"
+}
+
+### Сохранение токена
+@authToken = {{login.response.body.access_token}}
+
+### Получение профиля пользователя
+GET http://localhost:8000/users/me
+Authorization: Bearer {{authToken}}
+
+### Обновление профиля пользователя
+PUT http://localhost:8000/users/me
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "birth_date": "1990-01-01",
+  "phone_number": "1234567890",
+  "email": "update1d@example.com"
+}
+
+### Пример неудачного входа (неверный пароль)
+POST http://localhost:8000/login
+Content-Type: application/json
+
+{
+  "login": "testuser",
+  "password": "wrongpassword"
+}
+
+### Пример регистрации с уже существующим логином (ожидаем ошибку)
+POST http://localhost:8000/register
+Content-Type: application/json
+
+{
+  "login": "testuser",
+  "password": "anotherpassword",
+  "email": "another@example.com"
+}
+
+### Пример входа через форму 
+# @name tokenForm
+POST http://localhost:8000/token
+Content-Type: application/x-www-form-urlencoded
+
+username=testuser&password=testpassword
+
+### Сохранение токена из формы
+@formToken = {{tokenForm.response.body.access_token}}
+
+### Получение профиля пользователя с токеном из формы
+GET http://localhost:8000/users/me
+Authorization: Bearer {{formToken}}
