@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: User Authentication API
+  title: User Authentication and Posts API
   version: 1.0.0
 
 paths:
@@ -43,7 +43,6 @@ paths:
                 $ref: '#/components/schemas/Token'
         '401':
           description: Не авторизован (неверный логин или пароль)
-
 
   /token:
     post:
@@ -109,6 +108,137 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           description: Не авторизован
+
+  /posts:
+    post:
+      summary: Создание нового поста
+      operationId: createPost
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '201':
+          description: Пост успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Не авторизован
+
+    get:
+      summary: Получение списка постов пользователя
+      operationId: listPosts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          description: Количество постов на странице
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список постов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPosts'
+        '401':
+          description: Не авторизован
+
+  /posts/{post_id}:
+    get:
+      summary: Получение поста по ID
+      operationId: getPost
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Данные поста
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Пост не найден
+
+    put:
+      summary: Обновление поста
+      operationId: updatePost
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdate'
+      responses:
+        '200':
+          description: Пост успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Пост не найден
+
+    delete:
+      summary: Удаление поста
+      operationId: deletePost
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Пост успешно удален
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Пост не найден
 
 components:
   schemas:
@@ -191,6 +321,77 @@ components:
           type: string
         token_type:
           type: string
+
+    PostCreate:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_private:
+          type: boolean
+          default: false
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
+
+    PostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_private:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        creator_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        is_private:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+
+    PaginatedPosts:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        total:
+          type: integer
+        page:
+          type: integer
+        total_pages:
+          type: integer
 
   securitySchemes:
     bearerAuth:

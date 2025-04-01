@@ -6,7 +6,21 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: users_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  posts_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: posts_db
+    volumes:
+      - postgres_posts_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -23,15 +37,29 @@ services:
       - SECRET_KEY=your-secret-key
     command: sh -c "python -m pytest && uvicorn app:app --host 0.0.0.0 --port 8000"
 
+  post_service:
+    build: ./post_service
+    depends_on:
+      posts_db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@posts_db:5432/posts_db
+      - PORT=50051
+    command: sh -c "python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. ./protos/posts.proto && python -m pytest && python server.py"
+
   api_service:
     build: ./api_service
     ports:
       - "8000:8000"
     depends_on:
       - user_service
+      - post_service
     environment:
       - USER_SERVICE_URL=http://user_service:8000
-    command: sh -c "python -m pytest && uvicorn app:app --host 0.0.0.0 --port 8000"
+      - POST_SERVICE_URL=post_service:50051
+      - SECRET_KEY=your-secret-key
+    command: sh -c "python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. ./protos/posts.proto && python -m pytest && uvicorn app:app --host 0.0.0.0 --port 8000"
 
 volumes:
-  postgres_data:
+  postgres_users_data:
+  postgres_posts_data:

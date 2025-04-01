@@ -1,0 +1,118 @@
+### User registration
+POST http://localhost:8000/register
+Content-Type: application/json
+
+{
+  "login": "testuser1",
+  "password": "testpassword",
+  "email": "test@example.com"
+}
+
+### User login
+# @name login
+POST http://localhost:8000/login
+Content-Type: application/json
+
+{
+  "login": "testuser1",
+  "password": "testpassword"
+}
+
+### Store the auth token
+@authToken = {{login.response.body.access_token}}
+
+### Get user profile
+GET http://localhost:8000/users/me
+Authorization: Bearer {{authToken}}
+
+### Update user profile
+PUT http://localhost:8000/users/me
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "birth_date": "1990-01-01",
+  "phone_number": "1234567890",
+  "email": "updated@example.com"
+}
+
+### Create a post
+# @name createPost
+POST http://localhost:8000/posts
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "My First Post",
+  "description": "This is a test post with some content",
+  "is_private": false,
+  "tags": ["test", "first", "example"]
+}
+
+### Store post ID
+@postId = {{createPost.response.body.id}}
+
+### Get post by ID
+GET http://localhost:8000/posts/{{postId}}
+Authorization: Bearer {{authToken}}
+
+### Update post
+PUT http://localhost:8000/posts/{{postId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "Updated Post Title",
+  "description": "This post has been updated with new content",
+  "is_private": true,
+  "tags": ["updated", "test"]
+}
+
+### Get list of posts
+GET http://localhost:8000/posts?page=1&page_size=10
+Authorization: Bearer {{authToken}}
+
+### Delete post
+DELETE http://localhost:8000/posts/{{postId}}
+Authorization: Bearer {{authToken}}
+
+### Create a private post
+POST http://localhost:8000/posts
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "My Private Post",
+  "description": "This is a private post that only I can see",
+  "is_private": true,
+  "tags": ["private", "secret"]
+}
+
+### Create another user (for testing private posts)
+POST http://localhost:8000/register
+Content-Type: application/json
+
+{
+  "login": "anotheruser",
+  "password": "password123",
+  "email": "another@example.com"
+}
+
+### Login as another user
+# @name loginAnother
+POST http://localhost:8000/login
+Content-Type: application/json
+
+{
+  "login": "anotheruser",
+  "password": "password123"
+}
+
+### Store the auth token for the second user
+@anotherToken = {{loginAnother.response.body.access_token}}
+
+### Try to access private post as another user
+GET http://localhost:8000/posts/{{postId}}
+Authorization: Bearer {{anotherToken}}
