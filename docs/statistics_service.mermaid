@@ -1,0 +1,30 @@
+erDiagram
+    STATISTICS ||--o{ LIKES_STATS : "has"
+    STATISTICS ||--o{ VIEWS_STATS : "has"
+    STATISTICS ||--o{ COMMENTS_STATS : "has"
+    STATISTICS {
+        int id PK
+        int post_id FK
+        int total_likes
+        int total_views
+        int total_comments
+        datetime updated_at
+    }
+    LIKES_STATS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        datetime liked_at
+    }
+    VIEWS_STATS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        datetime viewed_at
+    }
+    COMMENTS_STATS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        datetime commented_at
+    }

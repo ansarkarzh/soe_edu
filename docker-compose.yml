@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user_service:
+    build: ./user_service
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/users_db
+      - SECRET_KEY=your-secret-key
+    command: sh -c "python -m pytest && uvicorn app:app --host 0.0.0.0 --port 8000"
+
+  api_service:
+    build: ./api_service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - user_service
+    environment:
+      - USER_SERVICE_URL=http://user_service:8000
+    command: sh -c "python -m pytest && uvicorn app:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  postgres_data:
